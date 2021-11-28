@@ -1,14 +1,14 @@
 <?php
 
-require_once('class/IPFilter.class.php');  //doesn't seem to be need here... was causing Fatal error: Class 'IPFilter' not found 
+require_once('class/IPFilter.class.php');  //doesn't seem to be need here... was causing Fatal error: Class 'IPFilter' not found
 
-if (!isset($gCms)) exit; // added for protection.. 
+if (!isset($gCms)) exit; // added for protection..
 //$db = $this->getDb(); // not need here
-	$config =& $gCms->GetConfig(); 
-	$taboptarray = array('mysql' => 'TYPE=MyISAM');
-	$dict = NewDataDictionary($db);
+$config = &$gCms->GetConfig();
+$taboptarray = array('mysql' => 'ENGINE=MyISAM');
+$dict = NewDataDictionary($db);
 
-	//come back to Class needs work to not be seq dependent
+//come back to Class needs work to not be seq dependent
 ///*---------------------------------------------------------------------------------------------------*/
 //	$flds = "
 //			ip_id I KEY AUTO,
@@ -49,21 +49,27 @@ $flds = "
 	ip_mode I
 ";
 
-$sqlarray = $dict->CreateTableSQL($this->_GetDbName(),
-		$flds, $taboptarray);
+$sqlarray = $dict->CreateTableSQL(
+	$this->_GetDbName(),
+	$flds,
+	$taboptarray
+);
 $dict->ExecuteSQLArray($sqlarray);
 
 
 $flds = "
 	ipwatch_id I AUTOINCREMENT PRIMARY,
 	ip_value C(100),
-	first_try ".CMS_ADODB_DT.",
+	first_try " . CMS_ADODB_DT . ",
 	try_count I,
 	total_try_count I
 ";
 //first_try ".CMS_ADODB_DT.",
-$sqlarray = $dict->CreateTableSQL($this->_GetWatchDbName(),
-		$flds, $taboptarray);
+$sqlarray = $dict->CreateTableSQL(
+	$this->_GetWatchDbName(),
+	$flds,
+	$taboptarray
+);
 $dict->ExecuteSQLArray($sqlarray);
 
 
@@ -82,5 +88,3 @@ $this->AddEventHandler('Core', 'LoginFailed', false);
 $this->AddEventHandler('Core', 'LoginPost', false);
 
 $this->Audit(0, $this->GetName(), $this->Lang('installed', $this->GetVersion()));
-
-?>

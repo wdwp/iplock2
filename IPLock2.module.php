@@ -2,10 +2,11 @@
 #BEGIN_LICENSE
 #-------------------------------------------------------------------------
 # Module: IPLock2
-# 
+#
 #-------------------------------------------------------------------------
 # A fork of
 # Module: IPLock (c) 2010, Benoit Vermont (redwarp@gmail.com)
+# Forked by Yuri Haperski (wdwp@yandex.ru)
 #
 #-------------------------------------------------------------------------
 #
@@ -37,97 +38,121 @@
 #
 #-------------------------------------------------------------------------
 #END_LICENSE
-ini_set('include_path', 
+ini_set(
+	'include_path',
 	dirname(__FILE__) . '/class'
-	. PATH_SEPARATOR . ini_get('include_path')
+		. PATH_SEPARATOR . ini_get('include_path')
 );
 require_once('IPFilter.class.php');
-class IPLock2 extends CMSModule {
-	function GetName() {
+class IPLock2 extends CMSModule
+{
+	function GetName()
+	{
 		return 'IPLock2';
 	}
-	
-	function GetFriendlyName() {
-		return $this->Lang ( 'friendlyname' );
+
+	function GetFriendlyName()
+	{
+		return $this->Lang('friendlyname');
 	}
-	function GetVersion() {
-		return '1.0';
+	function GetVersion()
+	{
+		return '1.1';
 	}
-	function MinimumCMSVersion() {
-		return '2.0';
+	function MinimumCMSVersion()
+	{
+		return '2.1';
 	}
-	function GetAuthor() {
+	function GetAuthor()
+	{
 		return 'Benoit Vermont';
 	}
-	function GetAuthorEmail() {
+	function GetAuthorEmail()
+	{
 		return 'redwarp@gmail.com';
 	}
-	
-	function IsPluginModule() {
+
+	function IsPluginModule()
+	{
 		return false;
 	}
-	
-	function HasAdmin() {
+
+	function HasAdmin()
+	{
 		return true;
 	}
-	function GetHelp() {
-		return $this->Lang ( 'help' );
+	function GetHelp()
+	{
+		return $this->Lang('help');
 	}
-	
-	function GetAdminDescription() {
+
+	function GetAdminDescription()
+	{
 		//return $this->Lang ( 'moddescription' );
-		return $this->Lang ( 'moddescription' );
+		return $this->Lang('moddescription');
 	}
-	
-	function InstallPostMessage() {
-		return $this->Lang ( 'postinstall' );
+
+	function InstallPostMessage()
+	{
+		return $this->Lang('postinstall');
 	}
-	
-	function UninstallPreMessage() {
-		return html_entity_decode($this->Lang ( 'preuninstall' ),ENT_NOQUOTES, 'UTF-8');
+
+	function UninstallPreMessage()
+	{
+		return html_entity_decode($this->Lang('preuninstall'), ENT_NOQUOTES, 'UTF-8');
 	}
-	function UninstallPostMessage() {
-		return $this->Lang ( 'postuninstall' );
+	function UninstallPostMessage()
+	{
+		return $this->Lang('postuninstall');
 	}
-	function GetAdminSection() {
+	function GetAdminSection()
+	{
 		return 'siteadmin';
 	}
-	function VisibleToAdminUser() {
-		return $this->CheckPermission ( 'IPLock Admin' );
+	function VisibleToAdminUser()
+	{
+		return $this->CheckPermission('IPLock Admin');
 	}
-	function HandleEvents() {
+	function HandleEvents()
+	{
 		return true;
 	}
-	function DefaultLanguage(){
+	function DefaultLanguage()
+	{
 		return 'en_US';
 	}
-	
-	function GetNotificationOutput( $priority = 2 ){
-		if ($this->GetPreference('notification') == 'display' && $this->GetPreference('new_banned_ip') == 'not_verified' && $this->CheckPermission('IPLock Admin')){
+
+	function GetNotificationOutput($priority = 2)
+	{
+		if ($this->GetPreference('notification') == 'display' && $this->GetPreference('new_banned_ip') == 'not_verified' && $this->CheckPermission('IPLock Admin')) {
 			$ret = new stdClass;
 			$ret->priority = 3;
 			$ret->html = $this->lang('notification_message', $this->CreateLink($id, 'defaultadmin', $returnid, $this->lang('friendlyname'), array('active_tab' => 'denied_ip')));
 			return $ret;
-		}
-		else {
+		} else {
 			return '';
 		}
-	} 
-	
-	function _GetDbName(){
-		return cms_db_prefix().'module_iplock';
 	}
-	function _GetWatchDbName(){
+
+	function _GetDbName()
+	{
+		return cms_db_prefix() . 'module_iplock';
+	}
+	function _GetWatchDbName()
+	{
 		return $this->_GetDbName() . '_watch';
 	}
-	function _IPFilterInit(){
+	function _IPFilterInit()
+	{
 		IPFilter::init($this);
 	}
-	
+
 	//TODO
 	///This should be pulled out at a smarty templete
-	function _IPTable($id, array $ipArray, array $parameters = null){
+	function _IPTable($id, array $ipArray, array $parameters = null)
+	{
 		global $id;
+		$returnid = '';
 		$rowcount = count($ipArray);
 		$thead = $this->lang('ip_comment');
 		$liste = <<<TBS
@@ -142,25 +167,24 @@ class IPLock2 extends CMSModule {
 	</thead>
 	<tbody>
 TBS;
-		if( $rowcount == 0 ){
-			$liste .= "<tr class='row1'><td colspan='4'>".$this->Lang('emptylist')."</tr>";
-		}
-		else {
+		if ($rowcount == 0) {
+			$liste .= "<tr class='row1'><td colspan='4'>" . $this->Lang('emptylist') . "</tr>";
+		} else {
 			$i = 0;
-			foreach( $ipArray as $ip_id => $ip_value){
+			foreach ($ipArray as $ip_id => $ip_value) {
 				$ip_comment = htmlspecialchars(IPFilter::getIPComment($ip_id));
 				// Construction des paramètres à donner à chaque lien.
-				foreach ( $parameters as $paramName => $paramValue ) {
-					$params [$paramName] = $paramValue;
+				foreach ($parameters as $paramName => $paramValue) {
+					$params[$paramName] = $paramValue;
 				}
 				$params['ip_id'] = $ip_id;
-				$liste .= "<tr class='row".($i%2+1)."'><td>$ip_value</td><td>$ip_comment</td><td>".
-				$this->CreateLink ( $id, 'edit_ip_comment', $returnid, '<img src="../modules/' . $this->GetName () . '/images/edit.gif" class="systemicon" alt="' . $this->Lang ( 'edit' ) . '" title="' . $this->Lang ( 'edit' ) . '" />', $params).
-				"</td>";
+				$liste .= "<tr class='row" . ($i % 2 + 1) . "'><td>$ip_value</td><td>$ip_comment</td><td>" .
+					$this->CreateLink($id, 'edit_ip_comment', $returnid, '<img src="../modules/' . $this->GetName() . '/images/edit.gif" class="systemicon" alt="' . $this->Lang('edit') . '" title="' . $this->Lang('edit') . '" />', $params) .
+					"</td>";
 				if ($ip_value == '127.0.0.1') {
 					$liste .= '<td></td>';
 				} else {
-					$liste .= "<td>" . $this->CreateLink ( $id, 'remove_ip', $returnid, '<img src="../modules/' . $this->GetName () . '/images/delete.gif" class="systemicon" alt="' . $this->Lang ( 'delete' ) . '" title="' . $this->Lang ( 'delete' ) . '" />', $params, $this->Lang ( 'deleteconfirm' ) ) . '</td></tr>';
+					$liste .= "<td>" . $this->CreateLink($id, 'remove_ip', $returnid, '<img src="../modules/' . $this->GetName() . '/images/delete.gif" class="systemicon" alt="' . $this->Lang('delete') . '" title="' . $this->Lang('delete') . '" />', $params, $this->Lang('deleteconfirm')) . '</td></tr>';
 				}
 				$i++;
 			}
@@ -171,29 +195,28 @@ TBS;
 TBE;
 		return $liste;
 	}
-	
-	function _IPField($id, $action){
+
+	function _IPField($id, $action)
+	{
 		global $params;
 		//$ipfield = $this->CreateFormStart($id, $action, $returnid). // $returnid is undefined should be passing in
-		$ipfield = $this->CreateFormStart($id, $action).'<p>'.
-		$this->CreateInputText($id, 'field0','',5).'.'.
-		$this->CreateInputText($id, 'field1','',5).'.'.
-		$this->CreateInputText($id, 'field2','',5).'.'.
-		$this->CreateInputText($id, 'field3','',5).
-		$this->CreateInputSubmit($id, 'submit', $this->Lang('add')).
-		'</p>'.$this->CreateFormEnd();
-		if(isset($params[$action.'_error'])){
-			$ipfield .= $this->ShowErrors($params[$action.'_error']);
+		$ipfield = $this->CreateFormStart($id, $action) . '<p>' .
+			$this->CreateInputText($id, 'field0', '', 5) . '.' .
+			$this->CreateInputText($id, 'field1', '', 5) . '.' .
+			$this->CreateInputText($id, 'field2', '', 5) . '.' .
+			$this->CreateInputText($id, 'field3', '', 5) .
+			$this->CreateInputSubmit($id, 'submit', $this->Lang('add')) .
+			'</p>' . $this->CreateFormEnd();
+		if (isset($params[$action . '_error'])) {
+			$ipfield .= $this->ShowErrors($params[$action . '_error']);
 		}
-		if ($action == 'allow_ip'){
-			$ipfield .= $this->CreateFormStart($id, $action).'<p>'.
-			$this->lang('add_current_ip', $_SERVER['REMOTE_ADDR']).' '.
-			$this->CreateInputHidden($id,'ip',$_SERVER['REMOTE_ADDR']).
-			$this->CreateInputSubmit($id, 'submit', $this->lang('add')).
-			'</p>'.$this->CreateFormEnd();
+		if ($action == 'allow_ip') {
+			$ipfield .= $this->CreateFormStart($id, $action) . '<p>' .
+				$this->lang('add_current_ip', $_SERVER['REMOTE_ADDR']) . ' ' .
+				$this->CreateInputHidden($id, 'ip', $_SERVER['REMOTE_ADDR']) .
+				$this->CreateInputSubmit($id, 'submit', $this->lang('add')) .
+				'</p>' . $this->CreateFormEnd();
 		}
 		return $ipfield;
 	}
 }
-
-?>
